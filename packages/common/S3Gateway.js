@@ -54,6 +54,30 @@ class S3Gateway {
       throw err;
     }
   }
+
+  /**
+   * Test if an S3 Object exists
+   *
+   * @param {string} bucket - the Object's bucket
+   * @param {string} key - the Object's key
+   * @returns {Promise<boolean>}
+   */
+  async objectExists(bucket, key) {
+    const { s3Service } = privates.get(this);
+
+    try {
+      await s3Service.headObject({
+        Bucket: bucket,
+        Key: key
+      }).promise();
+      return true;
+    }
+    catch (err) {
+      if (err.code === 'NotFound') return false;
+
+      throw err;
+    }
+  }
 }
 
 module.exports = {
