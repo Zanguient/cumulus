@@ -1,5 +1,8 @@
 'use strict';
 
+const fs = require('fs');
+const pump = require('pump');
+
 class S3BucketNotFound extends Error {
   constructor(bucket) {
     super(`S3 Bucket not found: ${bucket}`);
@@ -19,9 +22,51 @@ class S3ObjectNotFound extends Error {
 
 const privates = new WeakMap();
 
+/**
+ * The S3 interface we wish we had.
+ */
 class S3Gateway {
   constructor(s3Service) {
     privates.set(this, { s3Service });
+  }
+
+  /**
+   * Save an S3 Object to disk
+   *
+   * @param {Object} params
+   * @param {string} params.bucket - the source bucket
+   * @param {string} params.key - the source key
+   * @param {string} params.destination - the destination filename
+   * @returns {Promise<string>} the destination filename
+   */
+  async downloadObject(params = {}) {
+    const { bucket, key, destination } = params;
+
+    const { s3Service } = privates.get(this);
+
+    return new Promise((resolve, reject) => {
+      const objectReadStream = s3Service.getObject({
+        Bucket: bucket,
+        Key: key
+      }).createReadStream();
+
+      const fileWriteStream = fs.createWriteStream(destination);
+
+      pump(objectReadStream, fileWriteStream, (err) => {
+        if (err) {
+          if (err.name === 'NoSuchBucket') {
+            reject(new S3BucketNotFound(bucket));
+          }
+          else if (err.name === 'NoSuchKey') {
+            reject(new S3ObjectNotFound(bucket, key));
+          }
+          else {
+            reject(err);
+          }
+        }
+        else resolve(destination);
+      });
+    });
   }
 
   /**
@@ -70,6 +115,7 @@ class S3Gateway {
         Bucket: bucket,
         Key: key
       }).promise();
+
       return true;
     }
     catch (err) {
