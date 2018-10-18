@@ -1,7 +1,7 @@
 'use strict';
 
 const _get = require('lodash.get');
-const { S3 } = require('@cumulus/ingest/aws');
+const aws = require('@cumulus/common/aws');
 const handle = require('../lib/response').handle;
 
 /**
@@ -11,12 +11,16 @@ const handle = require('../lib/response').handle;
  * @param {callback} cb - aws lambda callback function
  * @returns {undefined} undefined
  */
-function list(event, cb) {
-  const key = `${process.env.stackName}/workflows/list.json`;
-  S3.get(process.env.bucket, key).then((file) => {
-    const workflows = JSON.parse(file.Body.toString());
-    return cb(null, workflows);
-  }).catch((e) => cb(e));
+async function list(event, cb) {
+  const workflowsListKey = `${process.env.stackName}/workflows/list.json`;
+
+  try {
+    const { Body } = await aws.getS3Object(process.env.bucket, workflowsListKey);
+    return cb(null, Body.toString());
+  }
+  catch (err) {
+    return cb(err);
+  }
 }
 
 /**
@@ -26,20 +30,28 @@ function list(event, cb) {
  * @param {callback} cb - aws lambda callback function
  * @returns {undefined} undefined
  */
-function get(event, cb) {
+async function get(event, cb) {
   const name = _get(event.pathParameters, 'name');
 
-  const key = `${process.env.stackName}/workflows/list.json`;
-  S3.get(process.env.bucket, key)
-    .then((file) => {
-      const workflows = JSON.parse(file.Body.toString());
+  const workflowKey = `${process.env.stackName}/workflows/list.json`;
+  try {
+    const { Body } = await aws.getS3Object(process.env.bucket, workflowKey);
 
-      const matchingWorkflow = workflows.find((workflow) => workflow.name === name);
-      if (matchingWorkflow) return cb(null, matchingWorkflow);
+    const jsonResponse = JSON.parse(Body);
 
-      return cb({ message: `A record already exists for ${name}` });
-    })
-    .catch(cb);
+    const matchingWorkflow = jsonResponse.find((workflow) => workflow.name === name);
+    if (matchingWorkflow) return cb(null, matchingWorkflow);
+
+    const e = new Error('The specified key does not exist.');
+    e.name = 'NoSuchKey';
+    throw e;
+  }
+  catch (err) {
+    if (err.name === 'NoSuchKey') {
+      return cb(err, null, 404);
+    }
+    return cb(err, null, 500);
+  }
 }
 
 /**

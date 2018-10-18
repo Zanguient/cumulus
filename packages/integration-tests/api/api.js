@@ -394,6 +394,120 @@ async function addProviderApi({ prefix, provider }) {
   });
 }
 
+/**
+ * Fetch a list of providers from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @returns {Promise<Object>} - the list of providers fetched by the API
+ */
+async function getProviders({ prefix }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiProvidersDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/providers',
+      path: '/providers'
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
+/**
+ * Fetch a provider from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @param {string} params.providerId - the ID of the provider to fetch
+ * @returns {Promise<Object>} - the provider fetched by the API
+ */
+async function retrieveProvider({ prefix, providerId }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiProvidersDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/providers/{providerId}',
+      path: `/providers/${providerId}`,
+      pathParameters: {
+        id: providerId
+      }
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
+/**
+ * Fetch a list of collections from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @returns {Promise<Object>} - the list of collections fetched by the API
+ */
+async function getCollections({ prefix }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiCollectionsDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/collections',
+      path: '/collections'
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
+/**
+ * Fetch a collection from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @param {string} params.collectionId - the ID of the collection to fetch
+ * @returns {Promise<Object>} - the collection fetched by the API
+ */
+async function retrieveCollection({ prefix, collectionName, collectionVersion }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiCollectionsDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/collections/{collectionName}/{version}',
+      path: `/collections/${collectionName}/${collectionVersion}`,
+      pathParameters: {
+        collectionName: collectionName,
+        version: collectionVersion
+      }
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
+/**
+ * Fetch a list of workflows from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @returns {Promise<Object>} - the list of workflows fetched by the API
+ */
+async function getWorkflows({ prefix }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiWorkflowsDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/workflows',
+      path: '/workflows'
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
 module.exports = {
   applyWorkflow,
   callCumulusApi,
@@ -405,6 +519,11 @@ module.exports = {
   getExecutionStatus,
   addCollectionApi,
   addProviderApi,
+  getProviders,
+  getCollections,
+  getWorkflows,
+  retrieveProvider,
+  retrieveCollection,
   getGranule,
   getLogs,
   postBulkDelete,

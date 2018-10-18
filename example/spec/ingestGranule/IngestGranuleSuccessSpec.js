@@ -197,6 +197,24 @@ describe('The S3 Ingest Granules workflow', () => {
     expect(workflowExecution.status).toEqual('SUCCEEDED');
   });
 
+  it('can retrieve the specific provider that was created', async () => {
+    const providerList = await apiTestUtils.getProviders({ prefix: config.stackName });
+    expect(providerList.results.length).toBeGreaterThan(0);
+
+    const providerResult = await apiTestUtils.retrieveProvider({ prefix: config.stackName, providerId: provider.id });
+    expect(providerResult).not.toBeNull;
+  });
+
+  it('can retrieve the specific collection that was created', async () => {
+    const collectionList = await apiTestUtils.getCollections({ prefix: config.stackName });
+    expect(collectionList.results.length).toBeGreaterThan(0);
+
+    const collectionResponse = await apiTestUtils.retrieveCollection(
+      { prefix: config.stackName, collectionName: collection.name, collectionVersion: collection.version }
+    );
+    expect(collectionResponse).not.toBeNull;
+  });
+
   it('makes the granule available through the Cumulus API', async () => {
     const granule = await apiTestUtils.getGranule({
       prefix: config.stackName,
@@ -577,6 +595,14 @@ describe('The S3 Ingest Granules workflow', () => {
           expect(log.executions).toEqual(executionName);
         });
       });
+    });
+
+    describe('workflows endpoint', () => {
+      it('returns a list of workflows', async () => {
+        const workflows = await apiTestUtils.getWorkflows({ prefix: config.stackName });
+        expect(workflows).not.toBe(undefined);
+        expect(workflows.length).toBeGreaterThan(0);
+      })
     });
   });
 });
