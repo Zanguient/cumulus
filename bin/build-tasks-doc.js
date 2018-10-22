@@ -31,7 +31,7 @@ function createTaskResourceLinks(packageName, sourceUrl, homepage) {
  * @returns {string} markdown documentation
  */
 function createTaskMarkdown(taskName) {
-  const pkg = require(`../tasks/${taskName}/package.json`); // eslint-disable-line global-require, import/no-dynamic-require, max-len
+  const pkg = require(`../tasks/${taskName}/package.json`); // eslint-disable-line global-require, import/no-dynamic-require
   const name = pkg.name;
   const homepage = pkg.homepage;
   const description = pkg.description;

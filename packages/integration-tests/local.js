@@ -7,7 +7,7 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-const clone = require('lodash.clonedeep');
+const cloneDeep = require('lodash.clonedeep');
 const { randomString } = require('@cumulus/common/test-utils');
 const { template } = require('@cumulus/deployment/lib/message');
 const { fetchMessageAdapter } = require('@cumulus/deployment/lib/adapter');
@@ -101,19 +101,20 @@ async function runStep(lambdaPath, lambdaHandler, message, stepName) {
   process.env.CUMULUS_MESSAGE_ADAPTER_DIR = dest;
 
   // add step name to the message
-  message.cumulus_meta.task = stepName;
+  const updatedMessage = cloneDeep(message);
+  updatedMessage.cumulus_meta.task = stepName;
 
   try {
     // run the task
     const moduleFn = lambdaHandler.split('.');
     const moduleFileName = moduleFn[0];
     const moduleFunctionName = moduleFn[1];
-    const task = require(`${taskFullPath}/${moduleFileName}`); // eslint-disable-line global-require, import/no-dynamic-require, max-len
+    const task = require(`${taskFullPath}/${moduleFileName}`); // eslint-disable-line global-require, import/no-dynamic-require
 
     console.log(`Started execution of ${stepName}`);
 
     return new Promise((resolve, reject) => {
-      task[moduleFunctionName](message, {}, (e, r) => {
+      task[moduleFunctionName](updatedMessage, {}, (e, r) => {
         if (e) return reject(e);
         console.log(`Completed execution of ${stepName}`);
         return resolve(r);
@@ -136,18 +137,20 @@ async function runStep(lambdaPath, lambdaHandler, message, stepName) {
  */
 async function runWorkflow(workflow, message) {
   const trail = {
-    input: clone(message),
+    input: cloneDeep(message),
     stepOutputs: {},
     output: {}
   };
 
-  let stepInput = clone(message);
+  let stepInput = cloneDeep(message);
 
-  for (const step of workflow.steps) {
+  for (let ctr = 0; ctr < workflow.steps.length; ctr += 1) {
+    const step = workflow.steps[ctr];
+    // eslint-disable-next-line no-await-in-loop
     stepInput = await runStep(step.lambda, step.handler, stepInput, step.name);
-    trail.stepOutputs[step.name] = clone(stepInput);
+    trail.stepOutputs[step.name] = cloneDeep(stepInput);
   }
-  trail.output = clone(stepInput);
+  trail.output = cloneDeep(stepInput);
 
   return trail;
 }

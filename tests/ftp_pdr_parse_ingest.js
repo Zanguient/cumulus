@@ -116,7 +116,7 @@ test.serial('Parse Pdrs from the previous step', async (t) => {
 
   const messages = await receiveSQSMessages(context.queueUrl, 4);
 
-  await Promise.all( // eslint-disable-line function-paren-newline
+  await Promise.all(
     messages.map(async (input) => {
       const msg = await runWorkflow(workflow, input.Body);
       t.truthy(msg.input.payload.pdr);
@@ -124,7 +124,8 @@ test.serial('Parse Pdrs from the previous step', async (t) => {
         msg.output.payload.granules.length,
         msg.output.payload.granulesCount
       );
-    }));
+    })
+  );
 });
 
 test.afterEach.always(async (t) =>

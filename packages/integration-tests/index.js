@@ -283,7 +283,6 @@ async function testWorkflow(stackName, bucketName, workflowName, inputFile) {
  *
  * @param {string} stackName - Cloud formation stack name
  * @param {string} bucketName - S3 internal bucket name
- * @returns {*} undefined
  */
 function setProcessEnvironment(stackName, bucketName) {
   process.env.internal = bucketName;

@@ -35,6 +35,9 @@
   },
   "author": "Cumulus Authors",
   "license": "Apache-2.0",
+  "dependencies": {
+    "lodash.isstring": "^4.0.1"
+  },
   "devDependencies": {
     "ava": "^0.25.0",
     "nyc": "^11.6.0"

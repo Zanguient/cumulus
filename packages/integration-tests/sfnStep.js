@@ -1,5 +1,6 @@
 'use strict';
 
+const isNil = require('lodash.isnil');
 const { sfn, s3 } = require('@cumulus/common/aws');
 
 /**
@@ -100,9 +101,8 @@ class SfnStep {
    * @returns {boolean} truthness of the execution being successful.
    */
   completedSuccessfulFilter(execution) {
-    return (execution.completeEvent !== undefined
-            && execution.completeEvent !== null
-            && execution.completeEvent.type === this.successEvent);
+    return (isNil(execution.completeEvent)
+      && execution.completeEvent.type === this.successEvent);
   }
 
   /**
@@ -189,7 +189,9 @@ class SfnStep {
     // If querying for successful step output, use the first successful
     // execution or the last execution if none were successful
     let stepExecution;
-    const successfulPassedExecutions = stepExecutions.filter((e) => this.completedSuccessfulFilter(e));
+    const successfulPassedExecutions = stepExecutions.filter((e) =>
+      this.completedSuccessfulFilter(e));
+
     if (eventType === 'success'
         && successfulPassedExecutions
         && successfulPassedExecutions.length > 0) {
@@ -199,8 +201,7 @@ class SfnStep {
       stepExecution = stepExecutions[stepExecutions.length - 1];
     }
 
-    if (typeof stepExecution.completeEvent === 'undefined'
-        || stepExecution.completeEvent === null) {
+    if (!stepExecution.completeEvent) {
       console.log(`Step ${stepName} did not complete as expected.`);
       return null;
     }
@@ -233,7 +234,6 @@ class SfnStep {
  * `LambdaStep` is a step inside a step function that runs an AWS Lambda function.
  */
 class LambdaStep extends SfnStep {
-  //eslint-disable-next-line require-jsdoc
   constructor() {
     super();
     this.scheduleFailedEvent = 'LambdaFunctionScheduleFailed';
@@ -267,7 +267,6 @@ class LambdaStep extends SfnStep {
  * `ActivityStep` is a step inside a step function that runs an AWS ECS activity.
  */
 class ActivityStep extends SfnStep {
-  //eslint-disable-next-line require-jsdoc
   constructor() {
     super();
     this.scheduleFailedEvent = 'ActivityScheduleFailed';
